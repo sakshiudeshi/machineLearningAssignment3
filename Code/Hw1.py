@@ -1,3 +1,4 @@
+#Code for Hard EM
 #!/usr/bin/env python
 import csv
 import matplotlib.pyplot as plt
@@ -90,18 +91,21 @@ def plot_set(set):
     plt.scatter(x, y)
     plt.pause()
 
-def plot_dict(data_dict, k1, k2):
+def plot_dict(data_dict, k1, k2, redraw):
     colors = list("rbrb")
-    plt.ion()
 
-    # gs = gridspec.GridSpec(3, 5)
+    if redraw == True:
+        plt.ion()
+    else:
+        plt.show()
+
 
     for item in data_dict.values():
         arr = np.asarray(item)
         (x, y) = arr.T
         plt.scatter(x, y, color=colors.pop())
 
-    # print find_sigma(k1, data_dict[1])
+
     fig = plt.gcf()
     ax = fig.gca()
     c1 = plt.Circle((k1[0], k1[1]), find_sigma(k1, data_dict[1]), color=colors.pop(), fill=False, linewidth=2)
@@ -109,9 +113,14 @@ def plot_dict(data_dict, k1, k2):
     ax.add_artist(c1)
     ax.add_artist(c2)
 
-    plt.pause(0.3)
-    c1.remove()
-    c2.remove()
+
+    if redraw == True:
+        plt.pause(0.3)
+        c1.remove()
+        c2.remove()
+    else:
+        plt.ioff()
+        plt.show()
 
 def getRand():
     x = random.uniform(-5, 5)
@@ -119,7 +128,7 @@ def getRand():
     return [x, y]
 
 if __name__ == '__main__':
-    num = "3"
+    num = "2"
     # type = "small"
     type = "large"
     file_name =  "data_" + num + "_" + type + ".txt"
@@ -156,8 +165,8 @@ if __name__ == '__main__':
                 temp_set.append(item)
         temp_dict = assign(temp_k1, temp_k2, temp_set)
         data_dict = temp_dict
-        plot_dict(data_dict, k1, k2)
+        plot_dict(data_dict, k1, k2, True)
 
 
-    plot_dict(data_dict, k1, k2)
+    plot_dict(data_dict, k1, k2, False)
     print "No of iterations for convergence " + str(counter)
