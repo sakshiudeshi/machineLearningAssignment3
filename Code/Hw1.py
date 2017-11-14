@@ -127,6 +127,8 @@ def getRand():
     y = random.uniform(-5, 5)
     return [x, y]
 
+
+
 if __name__ == '__main__':
     num = "2"
     # type = "small"

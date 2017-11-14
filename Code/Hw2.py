@@ -35,13 +35,10 @@ def getRand(k):
 def dist(x, y):
     return np.linalg.norm(np.asarray(x) - np.asarray(y))
 
-# def dist(x, y):
-#     return  math.sqrt(((x[0] - y[0])**2) + ((x[1] - y[1])**2))
 
 def get_P(m, s, d, x):
     temp = math.exp((-1/2*s)*dist(x, m)**2)
     denom = (2*math.pi*s)**(d/2)
-    # print s
     return temp/denom
 
 def get_sum(m, s, p, x):
@@ -58,7 +55,6 @@ def assign(set, p_arr):
 
     for i in range(len(set)):
         item = set[i]
-        # print "p arr " + str(p_arr[i][0] > p_arr[i][1])
         if (p_arr[i][0] > p_arr[i][1]):
             t1.append(item)
         else:
@@ -80,7 +76,6 @@ def find_mean(set, p_arr, type):
     return [x/n, y/n]
 
 def find_sigma(m, set, p_arr, type):
-    # print set
     n = len(set)
     if n == 0:
         return 0
@@ -141,12 +136,6 @@ def plot_dict(data_dict, m, s, redraw, heading=""):
 def m_step(set, p_arr):
     m = []
     s = []
-    # for type in [0, 1]:
-    #     set = data_dict[type]
-    #     mean = find_mean(set, p_arr, type)
-    #     sigma = find_sigma(mean, set, p_arr, type)
-    #     m.append(mean)
-    #     s.append(sigma)
 
     for type in [0, 1]:
         mean = find_mean(set, p_arr, type)
@@ -174,12 +163,23 @@ def plot_true(set, title = ""):
             t0.append(set[i])
         else:
             t1.append(set[i])
-    data_dict = data_dict = {0: t0, 1: t1}
+    data_dict = {0: t0, 1: t1}
     plot_dict(data_dict, [[0, 0], [0, 0]], [0, 0], False, title)
+    return 0
 
-# def get_P(m, s, d, x):
 
 
+
+def log_likelihood(set, m, s, p_arr, k):
+    ll = 0.0
+    n = len(set)
+    for t in range(n):
+        val = 0.0
+        p = p_arr[t]
+        for i in range(k):
+            val = val + p[i]*get_P(m[t], s[t], 2, set[t])
+        ll += np.log(val)
+    return ll
 
 if __name__ == '__main__':
     k = 2
@@ -201,32 +201,22 @@ if __name__ == '__main__':
     data_dict = assign(set, p_arr)
 
     plot_dict(data_dict, m, s, True)
-    print p_arr
-    # m, s = m_step(set, p_arr)
-    # p_arr = e_step(m, s, p_arr, set)
-    print "m is " + str(m)
-    print "s is " + str(s)
-    # print len(data_dict[1])
+
     count = 0
     data_split = []
     while True:
         m, s = m_step(set, p_arr)
-        print "m is " + str(m)
-        print "s is " + str(s)
         p_arr_new = e_step(m, s, p_arr, set)
 
         p_arr = p_arr_new
 
-        print p_arr
-
         data_dict = assign(set, p_arr)
-        # ll.append(log_likelihood(set, m, s))
-        print ""
-        data_split.append([len(data_dict[0]), len(data_dict[1])])
-        print len(data_dict[0])
-        print len(data_dict[1])
-        print ""
+
         plot_dict(data_dict, m, s, True)
+
+        print log_likelihood(set, m, s, p_arr, k)
+        print ""
+
         if(count > 10):
             if (data_split[count] == data_split[count - 1]):
                 break

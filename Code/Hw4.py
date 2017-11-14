@@ -5,7 +5,8 @@ import math
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import style
+import pandas as pd
+from scipy.spatial.distance import cdist, pdist
 
 def csv_reader(file_obj):
     reader = csv.reader(file_obj)
@@ -35,10 +36,13 @@ def getRand():
 def dist(x, y):
     return np.linalg.norm(np.asarray(x) - np.asarray(y))
 
+# def dist(x, y):
+#     return  math.sqrt(((x[0] - y[0])**2) + ((x[1] - y[1])**2))
 
 def get_P(m, s, d, x):
     temp = math.exp((-1/2*s)*dist(x, m)**2)
     denom = (2*math.pi*s)**(d/2)
+    # print s
     return temp/denom
 
 def get_sum(m, s, p, x):
@@ -65,6 +69,7 @@ def assign(set, p_arr, k):
 
     for i in range(len(set)):
         item = set[i]
+        # print "p arr " + str(p_arr[i][0] > p_arr[i][1])
         max = find_max_p(p_arr[i], k)
         t[max].append(item)
 
@@ -150,6 +155,12 @@ def plot_dict(data_dict, m, s, redraw, k, heading=""):
 def m_step(set, p_arr, k):
     m = []
     s = []
+    # for type in [0, 1]:
+    #     set = data_dict[type]
+    #     mean = find_mean(set, p_arr, type)
+    #     sigma = find_sigma(mean, set, p_arr, type)
+    #     m.append(mean)
+    #     s.append(sigma)
 
     for i in range(k):
         mean = find_mean(set, p_arr, i)
@@ -173,84 +184,86 @@ def get_rand_p_arr(set, k):
 
     return p_arr
 
-
-
-def log_likelihood(set, m, s, p_arr, k):
-    ll = 0.0
-    n = len(set)
-    for t in range(n):
-        val = 0.0
-        p = p_arr[t]
-        for i in range(k):
-            val = val + p[i]*get_P(m[i], s[i], 2, set[t])
-        ll += np.log(val)
-    return ll
-
-def plot_LL(LL):
-    plt.gcf().clear()
-    plt.plot(LL)
+def elbow(df, centroids):
+    k_euclid = [cdist(df.values, cent) for cent in centroids]
+    dist = [np.min(ke, axis=1) for ke in k_euclid]
+    wcss = [sum(d**2) for d in dist]
+    tss = sum(pdist(df.values)**2)/df.values.shape[0]
+    bss = tss - wcss
+    plt.plot(bss)
     plt.show()
 
 
+
 if __name__ == '__main__':
-    k = 2
-    num = "2"
-    # type = "small"
-    type = "large"
+    K = range(2, 9)
+    centroids = []
 
-    # file_name = "data_" + num + "_" + type + ".txt"
-    file_name = "mystery_" + num + ".txt"
-    file_path = os.getcwd() + "/data/" + file_name
-    set = sanitize(file_path)
+    for k in K:
 
-    m = []
-    s = []
-    LL = []
-    err = 0.005
-    for i in range(k):
-        m.append(getRand())
-        s.append(random.uniform(0, 5))
+        num = "2"
+        # type = "small"
+        type = "large"
 
-    p_arr = get_rand_p_arr(set, k)
-    data_dict = assign(set, p_arr, k)
+        file_name = "data_" + num + "_" + type + ".txt"
+        # file_name = "mystery_" + num + ".txt"
+        file_path = os.getcwd() + "/data/" + file_name
+        set = sanitize(file_path)
+        m = []
+        s = []
+        for i in range(k):
+            m.append(getRand())
+            s.append(random.uniform(0, 5))
+        # p = [0.5, 0.5]
 
-    plot_dict(data_dict, m, s, True, k)
-    count = 0
-    data_split = []
-    while True:
-        m, s = m_step(set, p_arr, k)
-
-        p_arr_new = e_step(m, s, p_arr, set, k)
-
-        p_arr = p_arr_new
-
+        p_arr = get_rand_p_arr(set, k)
+        # print p_arr
         data_dict = assign(set, p_arr, k)
 
-        temp = []
-        for i in range(k):
-            temp.append(len(data_dict[i]))
-        data_split.append(temp)
+        # plot_dict(data_dict, m, s, True, k)
+        # print p_arr
+        # m, s = m_step(set, p_arr)
+        # p_arr = e_step(m, s, p_arr, set)
+        # print "m is " + str(m)
+        # print "s is " + str(s)
+        # print len(data_dict[1])
+        count = 0
+        data_split = []
+        while True:
+            m, s = m_step(set, p_arr, k)
+            # print "m is " + str(m)
+            # print "s is " + str(s)
+            p_arr_new = e_step(m, s, p_arr, set, k)
 
-        plot_dict(data_dict, m, s, True, k)
+            p_arr = p_arr_new
 
-        ll = log_likelihood(set, m, s, p_arr, k)
-        LL.append(ll)
-        print ll
-        print ""
+            # print p_arr
 
-        if(count > 1):
-            print abs(LL[count] - LL[count - 1])
-            if (abs(LL[count] - LL[count - 1]) < err):
-                break
+            data_dict = assign(set, p_arr, k)
+            # ll.append(log_likelihood(set, m, s))
+            # print ""
+            temp = []
+            for i in range(k):
+                temp.append(len(data_dict[i]))
+            data_split.append(temp)
+                # print len(data_dict[i])
+            # print ""
+            # plot_dict(data_dict, m, s, True, k)
+            if(count > 2*k):
+                if (data_split[count] == data_split[count - 1]):
+                    centroids.append(np.asarray(m))
+                    print m
+                    break
+
+            count = count + 1
 
 
-        count = count + 1
-
+    df = pd.DataFrame(set)
+    elbow(df, centroids)
 
     # print data_split
 
-    plot_dict(data_dict, m, s, False, k, "Final Prediction")
-    plot_LL(LL)
+    # plot_dict(data_dict, m, s, False, k, "Final Prediction")
 
 
 
