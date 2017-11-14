@@ -16,6 +16,10 @@ def csv_reader(file_obj):
         data.append(" ".join(row))
     return data
 
+def get_P(m, s, d, x):
+    temp = math.exp((-1/2*s)*dist(x, m)**2)
+    denom = (2*math.pi*s)**(d/2)
+    return temp/denom
 
 def sanitize(path):
     data_set = []
@@ -49,16 +53,19 @@ def dist(x, y):
 def assign(k1, k2, set):
     t1 = []
     t2 = []
+    p_arr = []
 
     for item in set:
         # print dist(k1, item) < dist(k2, item)
         if (dist(k1, item) < dist(k2, item)):
             t1.append(item)
+            p_arr.append([1, 0])
         else:
             t2.append(item)
+            p_arr.append([0, 1])
 
     data_dict = {1: t1, 2: t2}
-    return data_dict
+    return data_dict, p_arr
 
 
 def find_mean(set):
@@ -128,9 +135,25 @@ def getRand():
     return [x, y]
 
 
+def log_likelihood(set, m, s, p_arr, k):
+    ll = 0.0
+    n = len(set)
+    for t in range(n):
+        val = 0.0
+        p = p_arr[t]
+        for i in range(k):
+            val = val + p[i]*get_P(m[i], s[i], 2, set[t])
+        ll += np.log(val)
+    return ll
+
+def plot_LL(LL):
+    plt.gcf().clear()
+    plt.title("Log Likelihood")
+    plt.plot(LL)
+    plt.show()
 
 if __name__ == '__main__':
-    num = "2"
+    num = "1"
     # type = "small"
     type = "large"
     file_name =  "data_" + num + "_" + type + ".txt"
@@ -143,32 +166,37 @@ if __name__ == '__main__':
     k2 = getRand()
     data_dict = initialization(set)
 
-    counter = 0
+    count = 0
+    LL = []
+    err = 0.1
     while(True):
-        temp_k1 = find_mean(data_dict[1])
-        print temp_k1
-        temp_k2 = find_mean(data_dict[2])
-        print temp_k2
+        k1 = find_mean(data_dict[1])
 
-        if (k1 == temp_k1 and k2 == temp_k2):
-            break
-        else:
-            k1 = temp_k1
-            k2 = temp_k2
-            counter = counter + 1
+        k2 = find_mean(data_dict[2])
 
-        print "K1 " + str(temp_k1)
-        print "K2 " + str(temp_k2)
         print ""
 
         temp_set = []
         for items in data_dict.values():
             for item in items:
                 temp_set.append(item)
-        temp_dict = assign(temp_k1, temp_k2, temp_set)
+        temp_dict, p_arr = assign(k1, k2, temp_set)
         data_dict = temp_dict
         plot_dict(data_dict, k1, k2, True)
 
+        ll = log_likelihood(set, [k1, k2], [find_sigma(k1, data_dict[1]), find_sigma(k2, data_dict[2])], p_arr, 2)
+        LL.append(ll)
+        print ll
+        print ""
+
+        if (count > 1):
+            print abs(LL[count] - LL[count - 1])
+            if (abs(LL[count] - LL[count - 1]) < err):
+                break
+        count = count + 1
+
 
     plot_dict(data_dict, k1, k2, False)
-    print "No of iterations for convergence " + str(counter)
+    plot_LL(LL)
+
+    print "No of iterations for convergence " + str(count)

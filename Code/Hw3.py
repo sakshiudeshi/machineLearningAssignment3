@@ -198,8 +198,8 @@ if __name__ == '__main__':
     # type = "small"
     type = "large"
 
-    # file_name = "data_" + num + "_" + type + ".txt"
-    file_name = "mystery_" + num + ".txt"
+    file_name = "data_" + num + "_" + type + ".txt"
+    # file_name = "mystery_" + num + ".txt"
     file_path = os.getcwd() + "/data/" + file_name
     set = sanitize(file_path)
 

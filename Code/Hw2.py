@@ -170,6 +170,7 @@ def plot_true(set, title = ""):
 
 
 
+
 def log_likelihood(set, m, s, p_arr, k):
     ll = 0.0
     n = len(set)
@@ -177,9 +178,15 @@ def log_likelihood(set, m, s, p_arr, k):
         val = 0.0
         p = p_arr[t]
         for i in range(k):
-            val = val + p[i]*get_P(m[t], s[t], 2, set[t])
+            val = val + p[i]*get_P(m[i], s[i], 2, set[t])
         ll += np.log(val)
     return ll
+
+def plot_LL(LL):
+    plt.gcf().clear()
+    plt.title("Log Likelihood")
+    plt.plot(LL)
+    plt.show()
 
 if __name__ == '__main__':
     k = 2
@@ -192,10 +199,12 @@ if __name__ == '__main__':
 
     m = []
     s = []
+    LL = []
     for i in range(k):
         m.append(getRand(k))
         s.append(random.uniform(0, 5))
     # p = [0.5, 0.5]
+    err = 0.005
 
     p_arr = get_rand_p_arr(set)
     data_dict = assign(set, p_arr)
@@ -213,17 +222,20 @@ if __name__ == '__main__':
         data_dict = assign(set, p_arr)
 
         plot_dict(data_dict, m, s, True)
-
-        print log_likelihood(set, m, s, p_arr, k)
+        ll = log_likelihood(set, m, s, p_arr, k)
+        LL.append(ll)
+        print ll
         print ""
 
-        if(count > 10):
-            if (data_split[count] == data_split[count - 1]):
+        if (count > 1):
+            print abs(LL[count] - LL[count - 1])
+            if (abs(LL[count] - LL[count - 1]) < err):
                 break
         count = count + 1
 
     plot_dict(data_dict, m, s, False, "Final Prediction")
     plot_true(set, "True Distribution")
+    plot_LL(LL)
 
 
 

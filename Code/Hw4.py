@@ -1,4 +1,4 @@
-#Code for Soft Em with variable k
+#Code for Soft Em with variable k and mystery elbow
 import csv
 import random
 import math
@@ -196,17 +196,17 @@ def elbow(df, centroids):
 
 
 if __name__ == '__main__':
-    K = range(2, 9)
+    K = range(2, 12)
     centroids = []
 
     for k in K:
 
-        num = "2"
+        num = "3"
         # type = "small"
         type = "large"
 
-        file_name = "data_" + num + "_" + type + ".txt"
-        # file_name = "mystery_" + num + ".txt"
+        # file_name = "data_" + num + "_" + type + ".txt"
+        file_name = "mystery_" + num + ".txt"
         file_path = os.getcwd() + "/data/" + file_name
         set = sanitize(file_path)
         m = []
